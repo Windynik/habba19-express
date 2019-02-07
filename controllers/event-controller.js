@@ -348,11 +348,38 @@ router.post('/notification', validator(eventValidator.notification), async (req,
  * Get all categories, events and workshops in one request
  * 
  */
-router.get('/master_fetch', async (req, res) => {
+router.get('/masterfetch', async (req, res) => {
 
-    res.send("Naah bruv");
+    const stmt1 = '' +
+        'SELECT E.* FROM EVENT AS E ORDER BY E.category_id' +
+        '';
 
-    // being implemented by Bharat.
+    try {
+        const result1 = await conn.query(stmt1);
+        let arr = [];
+        result1.forEach(row => {
+            if (arr.findIndex(o => o.category_id === row.category_id) === -1)
+                arr.push({
+                    category_id: row.category_id,
+                    events: []
+                })
+        })
+        arr = arr.map(obj => {
+            const eventsArr = result1.filter(o => o.category_id === obj.category_id);
+            obj.events = [...eventsArr];
+            return obj;
+        })
+
+        const obj = {};
+        obj.mainEvents = arr;
+        // IMPLEMENT WORKSHOPS
+        obj.workshops = {};
+    
+        res.send(new Response().withData(obj).noError());
+    } catch (e) {
+        console.log(e);
+        res.send(new Response().withError(ERR_CODE.DB_READ));
+    }
 });
 
 /**
