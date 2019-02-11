@@ -2,6 +2,27 @@
  * Starting point of our application
  * Habba 2019
  */
+var cluster = require('cluster');
+
+if (cluster.isMaster) {
+    var numWorkers = require('os').cpus().length;
+
+    console.log('Master cluster setting up ' + numWorkers + ' workers...');
+
+    for (var i = 0; i < numWorkers; i++) {
+        cluster.fork();
+    }
+
+    cluster.on('online', function (worker) {
+        console.log('Worker ' + worker.process.pid + ' is online');
+    });
+
+    cluster.on('exit', function (worker, code, signal) {
+        console.log('Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal);
+        console.log('Starting a new worker');
+        cluster.fork();
+    });
+} else {
 
 require('dotenv').config()
 const createError = require('http-errors');
@@ -13,7 +34,10 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const controllers = require('./controllers');
 const ev = require('express-validation');
-const { Response, ERR_CODE } = require('./helpers/response-helper');
+const {
+    Response,
+    ERR_CODE
+} = require('./helpers/response-helper');
 const config = require('./config.js');
 const main = async () => {
     await config.initDB();
@@ -24,9 +48,15 @@ const main = async () => {
     app.set('view engine', 'ejs');
 
     app.use(logger('dev'));
-    app.use(logger('combined', { stream: fs.createWriteStream('./access.log', { flags: 'a' }) }))
+    app.use(logger('combined', {
+        stream: fs.createWriteStream('./access.log', {
+            flags: 'a'
+        })
+    }))
     app.use(express.json());
-    app.use(express.urlencoded({ extended: false }));
+    app.use(express.urlencoded({
+        extended: false
+    }));
     app.use(cookieParser());
     app.use(express.static(path.join(__dirname, 'public')));
 
@@ -64,3 +94,4 @@ const main = async () => {
 }
 
 main();
+}
