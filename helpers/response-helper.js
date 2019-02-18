@@ -71,7 +71,15 @@ const ERR_CODE = {
     NOTIFICATION_FAILED: {
         code: 401,
         message: 'Notification did not send due to an internal error'
-    }
+    },
+    SUBSCRIPTION_FAILED:{
+        code:402,
+        message: 'Subscription for the notification has failed. Do contact the server administrator.'
+    },
+    UNSUBSCRIBE_FAILED:{
+        code: 403,
+        message: 'Unsubscription from the notification group has failed. Do contact the server administrator.'
+    },
 };
 module.exports = {
     Response, ERR_CODE

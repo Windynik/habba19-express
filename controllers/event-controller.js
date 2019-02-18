@@ -293,7 +293,7 @@ router.get('/user/details', validator(eventValidator.userDetails), async (req, r
 
 /**
  * NOTIFICATION
- * feilds: {
+ * fields: {
  *  title, message
  * }
  * headers: {
@@ -406,7 +406,7 @@ router.post('/subgen', async (req, res) => {
     }
     catch (e) {
         console.log(e);
-        res.send(new Response().withError(ERR_CODE.NOTIFICATION_FAILED));
+        res.send(new Response().withError(ERR_CODE.SUBSCRIPTION_FAILED));
     }
 })
 
@@ -435,5 +435,64 @@ router.post('/notifs', async (req, res) => {
     
 })
 
+/**
+ * UNSUBSCRIPTION from topics
+ * Allows for unsubscription from all the topics if so it is ever needed.
+ * However the "all" is still subscribed to since its not technically considered an event.
+ * headers:{
+ * device_id,user_id
+ * }
+ */
+
+router.post('/unsub', async(req,res)=>{
+    const { device_id, user_id } = req.body;
+    console.log(device_id+" and "+ user_id);    
+    const stmt = 'SELECT event_id FROM EVENT_REG WHERE user_id = ?'
+    try{
+        const result = await conn.query(stmt,[user_id]);
+        result.forEach(row => {
+            const unsubresult = admin.messaging().unsubscribeFromTopic(device_id, row.event_id)
+            .then(function(response) {
+            console.log('Successfully unsubscribed from topic:', response);
+            })
+            .catch(function(error) {
+            console.log('Error unsubscribing from topic:', error);
+            });      
+        });
+        }
+
+    catch(e){
+        console.log(e);
+        res.send(new Response().withError(ERR_CODE.UNSUBSCRIBE_FAILED));
+    }
+
+    res.send("Successfully unsubscribed from all topics.");
+})
+/**
+ * UNSUBSCRIBE FROM ONE
+ * This path allows for the unsubscription of just one topic.
+ * headers:{
+ * device_id,event_id
+ * }
+ */
+router.post('/unsubone',(req,res)=>{
+
+    const {device_id,event_id}= req.body;
+    try{
+            const unsubres = admin.messaging().unsubscribeFromTopic(device_id,event_id)
+            .then(function(response) {
+            res.send('Successfully unsubscribed from topic:', response);
+            })
+            .catch(function(error) {
+            console.log('Error unsubscribing from topic:', error);
+            });      
+        }
+
+    catch(e){
+        console.log(e);
+        res.send(new Response().withError(ERR_CODE.UNSUBSCRIBE_FAILED));
+    }
+
+})
 module.exports = router;
 
