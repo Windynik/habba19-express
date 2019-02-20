@@ -437,6 +437,41 @@ router.post('/notifs', async (req, res) => {
 })
 
 /**
+ * RESUBSCRIPTION to topics
+ * Allows for resubscription to all the topics if so it is ever needed.
+ * This is to be done after/if the user unsubscribes from all the event notifications.
+ * headers:{
+ * device_id,user_id
+ * }
+ */
+router.post('/resub',async(req,res)=>{
+
+    const { device_id, user_id } = req.body;
+    console.log(device_id+" and "+ user_id);    
+    const stmt = 'SELECT event_id FROM EVENT_REG WHERE user_id = ?'
+    try{
+        const result = await conn.query(stmt,[user_id]);
+        result.forEach(row => {
+            const resubresult = admin.messaging().subscribeToTopic(device_id, row.event_id)
+            .then(function(response) {
+            console.log('Successfully resubscribed from topic:', response);
+            })
+            .catch(function(error) {
+            console.log('Error resubscribing from topic:', error);
+            });      
+        });
+        }
+
+    catch(e){
+        console.log(e);
+        res.send(new Response().withError(ERR_CODE.SUBSCRIPTION_FAILED));
+    }
+
+    res.send("Successfully resubscribed from all topics.");
+
+})
+
+/**
  * UNSUBSCRIPTION from topics
  * Allows for unsubscription from all the topics if so it is ever needed.
  * However the "all" is still subscribed to since its not technically considered an event.
@@ -471,7 +506,7 @@ router.post('/unsub', async(req,res)=>{
 })
 /**
  * UNSUBSCRIBE FROM ONE
- * This path allows for the unsubscription of just one topic.
+ * This path allows for the unsubscription of just one topic if at all it is ever needed.
  * headers:{
  * device_id,event_id
  * }
