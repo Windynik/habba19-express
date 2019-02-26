@@ -29,6 +29,9 @@ const validator = require('express-validation');
 const { updateVersion } = require('../middleware');
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
+const testFolder = '/home/windynik/Projects/pythonpics/habba19';
+const testFolders = '../../images/instagram/habba19';
+const fs = require('fs');
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -529,6 +532,28 @@ router.post('/unsubone',(req,res)=>{
         res.send(new Response().withError(ERR_CODE.UNSUBSCRIBE_FAILED));
     }
 
+});
+/**
+ *  INSTRAGRAM PICS PATH
+ * This path allows for the paths of the scraped instagram pictures
+ * from the main server.
+ * It returns a response containing a array of all the paths of the images.
+ * with a success or failure.
+ */
+router.get('/instapics',(req,res)=>{
+    var resFile=[];
+    fs.readdir(testFolder, (err, files) => {
+    files.forEach(file => {
+    
+        if(file==null){
+        res.send(new Response().withError(ERR_CODE.PICTURES_NOTFOUND));
+        }
+        if(file.endsWith('.jpg')){
+            resFile.push(file);
+        }
+        });
+res.send(new Response().withData(resFile).noError());
+});
 })
 module.exports = router;
 

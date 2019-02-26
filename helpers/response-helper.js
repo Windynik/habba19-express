@@ -80,6 +80,10 @@ const ERR_CODE = {
         code: 403,
         message: 'Unsubscription from the notification group has failed. Do contact the server administrator.'
     },
+    PICTURES_NOTFOUND:{
+        code: 505,
+        message: 'No pictures were found in the server.'
+    }
 };
 module.exports = {
     Response, ERR_CODE
